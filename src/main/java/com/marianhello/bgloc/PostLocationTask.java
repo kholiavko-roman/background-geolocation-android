@@ -4,7 +4,7 @@ import com.marianhello.bgloc.data.BackgroundLocation;
 import com.marianhello.bgloc.data.LocationDAO;
 import com.marianhello.logging.LoggerManager;
 
-import org.json.JSONArray;
+import org.json.JSONObject;
 import org.json.JSONException;
 
 import java.util.concurrent.ExecutorService;
@@ -132,10 +132,10 @@ public class PostLocationTask {
 
     private boolean postLocation(BackgroundLocation location) {
         logger.debug("Executing PostLocationTask#postLocation");
-        JSONArray jsonLocations = new JSONArray();
+        JSONObject jsonLocations;
 
         try {
-            jsonLocations.put(mConfig.getTemplate().locationToJson(location));
+            jsonLocations = (JSONObject) (mConfig.getTemplate().locationToJson(location));
         } catch (JSONException e) {
             logger.warn("Location to json failed: {}", location.toString());
             return false;

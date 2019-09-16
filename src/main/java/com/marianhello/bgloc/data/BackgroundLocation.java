@@ -41,6 +41,8 @@ public class BackgroundLocation implements Parcelable {
     private int mockFlags = 0x0000;
     private int status = POST_PENDING;
     private Bundle extras = null;
+    private static String cityLine;
+
 
     private static final long TWO_MINUTES_IN_NANOS = 1000000000L * 60 * 2;
 
@@ -75,6 +77,13 @@ public class BackgroundLocation implements Parcelable {
     public BackgroundLocation(Integer locationProvider, Location location, float radius) {
         this(locationProvider, location);
         setRadius(radius);
+    }
+
+    @Deprecated
+    public BackgroundLocation(Integer locationProvider, Location location, String address) {
+        this(location);
+        this.locationProvider = locationProvider;
+        cityLine = address;
     }
 
     /**
@@ -939,6 +948,9 @@ public class BackgroundLocation implements Parcelable {
         }
         if ("@mockLocationsEnabled".equals(key)) {
             return hasMockLocationsEnabled() ? areMockLocationsEnabled() : JSONObject.NULL;
+        }
+        if ("@cityLine".equals(key)) {
+            return cityLine;
         }
 
         return null;

@@ -27,6 +27,12 @@ import com.marianhello.logging.LoggerManager;
 import com.marianhello.utils.ToneGenerator;
 import com.marianhello.utils.ToneGenerator.Tone;
 
+import android.location.Geocoder;
+import java.io.IOException;
+import android.location.Address;
+import android.util.Log;
+import java.util.List;
+
 /**
  * AbstractLocationProvider
  */
@@ -95,7 +101,7 @@ public abstract class AbstractLocationProvider implements LocationProvider {
     protected void handleLocation (Location location) {
         playDebugTone(Tone.BEEP);
         if (mDelegate != null) {
-            BackgroundLocation bgLocation = new BackgroundLocation(PROVIDER_ID, location);
+            BackgroundLocation bgLocation = new BackgroundLocation(PROVIDER_ID, location, getAddress(location));
             bgLocation.setMockLocationsEnabled(hasMockLocationsEnabled());
             mDelegate.onLocation(bgLocation);
         }
@@ -110,7 +116,7 @@ public abstract class AbstractLocationProvider implements LocationProvider {
     protected void handleStationary (Location location, float radius) {
         playDebugTone(Tone.LONG_BEEP);
         if (mDelegate != null) {
-            BackgroundLocation bgLocation = new BackgroundLocation(PROVIDER_ID, location);
+            BackgroundLocation bgLocation = new BackgroundLocation(PROVIDER_ID, location, getAddress(location));
             bgLocation.setRadius(radius);
             bgLocation.setMockLocationsEnabled(hasMockLocationsEnabled());
             mDelegate.onStationary(bgLocation);
@@ -125,7 +131,7 @@ public abstract class AbstractLocationProvider implements LocationProvider {
     protected void handleStationary (Location location) {
         playDebugTone(Tone.LONG_BEEP);
         if (mDelegate != null) {
-            BackgroundLocation bgLocation = new BackgroundLocation(PROVIDER_ID, location);
+            BackgroundLocation bgLocation = new BackgroundLocation(PROVIDER_ID, location, getAddress(location));
             bgLocation.setMockLocationsEnabled(hasMockLocationsEnabled());
             mDelegate.onStationary(bgLocation);
         }
@@ -167,5 +173,52 @@ public abstract class AbstractLocationProvider implements LocationProvider {
 
         int duration = 1000;
         toneGenerator.startTone(name, duration);
+    }
+
+    public String getAddress(Location location){
+        StringBuilder result = new StringBuilder();
+        try {
+
+            Geocoder geocoder = new Geocoder(mContext);
+
+            List<Address> addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+            if (addresses.size() > 0) {
+
+            String locale = "";
+            String adminArea = "unknown";
+            String postalCode = "unknown zip code";
+            String countryCode = "unknown country";
+
+            int index = 0;
+
+            for (Address address: addresses) {
+
+                if (index == 0) {
+                    locale = address.getLocality();
+                    adminArea = address.getAdminArea() != null ? address.getAdminArea() : adminArea;
+                    countryCode = address.getCountryCode() != null ? address.getCountryCode() : countryCode;
+                }
+
+                postalCode = address.getPostalCode() != null ? address.getPostalCode() : postalCode;
+
+                if (postalCode != null && !postalCode.isEmpty()) {
+                    break;
+                }
+
+                index++;
+            }
+
+            if (locale != null && !locale.isEmpty()) {
+                result.append(locale).append(", ");
+            }
+
+            result.append(adminArea).append(", ");
+            result.append(postalCode).append(", ");
+            result.append(countryCode);
+            }
+        } catch (IOException e) {
+            Log.e("tag", e.getMessage());
+        }
+        return result.toString();
     }
 }
